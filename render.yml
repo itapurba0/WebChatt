@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: backend
-    env: node
-    build:
-      context: .
-      cmd: npm install
-    start:
-      cmd: node backend/src/index.js
