@@ -6,4 +6,4 @@ services:
       context: .
       cmd: npm install
     start:
-      cmd: node backend/index.js
+      cmd: node backend/src/index.js
