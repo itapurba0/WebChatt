@@ -13,7 +13,7 @@ const Navbar = () => {
       <div className="flex items-center gap-2">
         <Link to="/" className="flex items-center gap-2">
           <MessageSquare className="w-7 h-7 text-primary" />
-          <span className="font-bold text-lg hidden sm:inline">ChatApp</span>
+          <span className="font-bold text-lg hidden sm:inline">WebChatt</span>
         </Link>
       </div>
 
