@@ -8,9 +8,11 @@ export const useChatStore = create((set, get) => ({
   users: [],
   friends: [],
   requests: [],
+  latestMessages: {},
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
+  unreadUserIds: [],
 
   getFriends: async () => {
     set({ isUsersLoading: true });
@@ -40,6 +42,14 @@ export const useChatStore = create((set, get) => ({
     try {
       const res = await axiosInstance.get(`/messages/${userId}`);
       set({ messages: res.data });
+      if (res.data.length > 0) {
+        set((state) => ({
+          latestMessages: {
+            ...state.latestMessages,
+            [userId]: res.data[res.data.length - 1],
+          },
+        }));
+      }
     } catch (error) {
       toast.error(error.response.data.message);
     } finally {
@@ -50,25 +60,67 @@ export const useChatStore = create((set, get) => ({
     const { selectedUser, messages } = get();
     try {
       const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
-      set({ messages: [...messages, res.data] });
+      const { latestMessages } = get();
+      set({
+        messages: [...messages, res.data],
+        latestMessages: {
+          ...latestMessages,
+          [selectedUser._id]: res.data,
+        },
+      });
     } catch (error) {
       toast.error(error.response.data.message);
     }
   },
-
-  subscribeToMessages: () => {
-    const { selectedUser } = get();
-    if (!selectedUser) return;
-
+  latestMessage: () => {
     const socket = useAuthStore.getState().socket;
+    if (!socket) return;
 
     socket.on("newMessage", (newMessage) => {
-      const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
-      if (!isMessageSentFromSelectedUser) return;
-      toast.success("New message received");
+      const { latestMessages } = get();
       set({
-        messages: [...get().messages, newMessage],
+        latestMessages: {
+          ...latestMessages,
+          [newMessage.senderId]: newMessage,
+        },
       });
+    });
+  },
+
+  subscribeToMessages: () => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+
+    socket.on("newMessage", (newMessage) => {
+      const { selectedUser, unreadUserIds, messages } = get();
+      // const authUserId = useAuthStore.getState().authUser._id;
+
+      // Determine the other user's ID in this conversation
+      // const otherUserId =
+      //   newMessage.senderId === authUserId
+      //     ? newMessage.receiverId
+      //     : newMessage.senderId;
+      // // Update latest message for the sender
+      // set({
+      //   latestMessages: {
+      //     ...latestMessages,
+      //     [otherUserId]: newMessage,
+      //   },
+      // });
+
+      // ...existing unread logic...
+      if (!selectedUser || newMessage.senderId !== selectedUser._id) {
+        if (!unreadUserIds.includes(newMessage.senderId)) {
+          set({
+            unreadUserIds: [...unreadUserIds, newMessage.senderId],
+          });
+        }
+      }
+      if (selectedUser && newMessage.senderId === selectedUser._id) {
+        set({
+          messages: [...messages, newMessage],
+        });
+      }
     });
   },
 
@@ -76,15 +128,7 @@ export const useChatStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     socket.off("newMessage");
   },
-  getLatestMessagesFromFriends: async () => {
-    const { users } = get();
-    const promises = users.map(async (user) => {
-      const res = await axiosInstance.get(`/messages/${user._id}?limit=1`);
-      return res.data[0];
-    });
-    const latestMessages = await Promise.all(promises);
-    set({ messages: latestMessages });
-  },
+
 
   addFriend: async (receiverId) => {
     try {
@@ -116,5 +160,10 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
-  setSelectedUser: (selectedUser) => set({ selectedUser }),
+  setSelectedUser: (selectedUser) => {
+    set((state) => ({
+      selectedUser,
+      unreadUserIds: state.unreadUserIds.filter((id) => id !== selectedUser?._id),
+    }));
+  },
 }));
