@@ -5,7 +5,7 @@ import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import { Users, Menu, X } from "lucide-react";
 
 const Sidebar = () => {
-  const { getFriends, friends, selectedUser, setSelectedUser, isUsersLoading, latestMessages,latestMessage } = useChatStore();
+  const { getFriends, friends, selectedUser, setSelectedUser, isUsersLoading, latestMessages, latestMessage } = useChatStore();
   const { onlineUsers } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
   const [open, setOpen] = useState(false);
@@ -24,7 +24,7 @@ const Sidebar = () => {
     <>
       {/* Hamburger menu for mobile */}
       <button
-        className="fixed top-4 left-4 z-50 md:hidden bg-base-100 p-2 rounded-full shadow"
+        className="fixed top-4 left-4 z-50 md:hidden bg-base-100 pt-14 p-2 rounded-full shadow"
         onClick={() => setOpen(true)}
         aria-label="Open sidebar"
       >
@@ -42,7 +42,7 @@ const Sidebar = () => {
       {/* Sidebar */}
       <aside
         className={`
-        fixed top-0 left-0 bottom-0 w-72 bg-base-200 border-r border-base-300 z-50 flex flex-col
+        fixed top-0 left-0 bottom-0 w-72 bg-base-200 border-r pt-14 border-base-300 z-50 flex flex-col
         transition-transform duration-200
         ${open ? "translate-x-0" : "-translate-x-full"}
         md:translate-x-0 md:static md:block

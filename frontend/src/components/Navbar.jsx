@@ -8,7 +8,7 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="w-full bg-base-100 border-b border-base-300 shadow flex items-center justify-between px-4 py-2 fixed top-0 left-0 z-50">
+    <header className="w-full bg-base-100 border-b border-base-300 shadow flex items-center justify-between px-4 py-2 fixed top-0 left-0 z-60">
       {/* Left: Logo or Home */}
       <div className="flex items-center gap-2">
         <Link to="/" className="flex items-center gap-2">
