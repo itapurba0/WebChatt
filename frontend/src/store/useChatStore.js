@@ -6,10 +6,23 @@ import { useAuthStore } from "./useAuthStore";
 export const useChatStore = create((set, get) => ({
   messages: [],
   users: [],
+  friends: [],
+  requests: [],
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
 
+  getFriends: async () => {
+    set({ isUsersLoading: true });
+    try {
+      const res = await axiosInstance.get("/friends/");
+      set({ friends: res.data });
+    } catch (error) {
+      toast.error(error.response.data.message);
+    } finally {
+      set({ isUsersLoading: false });
+    }
+  },
   getUsers: async () => {
     set({ isUsersLoading: true });
     try {
@@ -62,6 +75,45 @@ export const useChatStore = create((set, get) => ({
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     socket.off("newMessage");
+  },
+  getLatestMessagesFromFriends: async () => {
+    const { users } = get();
+    const promises = users.map(async (user) => {
+      const res = await axiosInstance.get(`/messages/${user._id}?limit=1`);
+      return res.data[0];
+    });
+    const latestMessages = await Promise.all(promises);
+    set({ messages: latestMessages });
+  },
+
+  addFriend: async (receiverId) => {
+    try {
+      await axiosInstance.post("/friends/send-request", { receiverId });
+      toast.success("Friend request sent!");
+      await get().getUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to send friend request");
+    }
+  },
+
+  acceptFriend: async (requestId) => {
+    console.log(requestId);
+    try {
+      await axiosInstance.put("/friends/accept-request", { id: requestId });
+      toast.success("Friend request accepted!");
+      await get().getUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to accept friend request");
+    }
+  },
+  /*************  ✨ Windsurf Command 🌟  *************/
+  getFriendRequests: async () => {
+    try {
+      const res = await axiosInstance.get("/friends/requests");
+      set({ requests: res.data });
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to get friend requests");
+    }
   },
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),
